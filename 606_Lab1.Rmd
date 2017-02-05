@@ -1,0 +1,83 @@
+---
+title: "606_Lab1"
+author: "Raghu Ramnath"
+date: "2/3/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 606 Lab1: Introduction to Data
+
+#Centers for Disease Control and Prevention (CDC)
+
+Exercise1:How many cases are there in this data set? How many variables? For each variable, identify its data type (e.g. categorical, discrete).
+
+```{r E1}
+
+source("http://www.openintro.org/stat/data/cdc.R")
+names(cdc)
+
+str(cdc)
+summary(cdc)
+
+table(cdc$smoke100)
+table(cdc$smoke100)/20000
+barplot(table(cdc$smoke100))
+```
+
+Exercise2: Create a numerical summary for height and age, and compute the interquartile range for each. Compute the relative frequency distribution for gender and exerany. How many males are in the sample? What proportion of the sample reports being in excellent health?
+
+```{r E2}
+summary(cdc$height)
+#IQR
+quantile(cdc$height, .5)
+
+summary(cdc$age)
+#IQR
+quantile(cdc$age , .5)
+
+# frequency distribution
+table(cdc$gender)/20000
+table(cdc$exerany)/20000
+table(cdc$gender)
+table(cdc$genhlth)/20000
+
+#Proportion of sample in excellent health
+mosaicplot(table(cdc$gender,cdc$genhlth))
+
+
+
+
+```
+
+Exercise 3. What does the mosaic plot reveal about smoking habits and gender?
+
+   No. of male somkers are more.
+   
+   
+Exercise 4: Create a new object called under23_and_smoke that contains all observations of respondents under the age of 23 that have smoked 100 cigarettes in their lifetime. Write the command you used to create the new object as the answer to this exercise.
+   
+```{r E4}
+
+under23_and_smoke <- subset(cdc, cdc$age < 23 & cdc$smoke100 == 1)
+#View(under23_and_smoke)
+summary(under23_and_smoke)
+
+```
+
+Exercise 5: What does this box plot show? Pick another categorical variable from the data set and see how it relates to BMI. List the variable you chose, why you might think it would have a relationship to BMI, and indicate what the figure seems to suggest.
+
+The box plot shows that, the lower the BMI excellent the health is.
+
+```{r E5}
+
+bmi <- (cdc$weight / cdc$height^2) * 703
+boxplot(bmi ~ cdc$exerany)
+boxplot(bmi ~ cdc$hlthplan)
+
+```
+
+The box plot shows people who exercised have better health and they still have health plan. there may be other outliers.

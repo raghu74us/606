@@ -1,0 +1,68 @@
+---
+title: "606_Lab0"
+author: "Raghu Ramnath"
+date: "2/2/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Lab 0
+
+The Data: Dr. Arbuthnot’s Baptism Records
+
+```{r E1}
+
+source("http://www.openintro.org/stat/data/arbuthnot.R")
+
+arbuthnot
+dim(arbuthnot)
+names(arbuthnot)
+
+#What command would you use to extract just the counts of girls baptized? 
+
+# counts of girls baptized by year
+arbuthnot$girls
+
+# total counts of girls baptized
+sum(arbuthnot$girls)
+
+```
+
+## Plots
+
+```{r E2}
+
+plot(x = arbuthnot$year, y = arbuthnot$girls)
+plot(x = arbuthnot$year, y = arbuthnot$girls, type = "l")
+
+#Is there an apparent trend in the number of girls baptized over the years?
+#How would you describe it?
+
+#Yes. Girls baptized has increased from period 1660 to 1700.
+
+```
+
+## Plots
+
+```{r E3}
+# Now, make a plot of the proportion of boys over time. What do you see? 
+tot <- arbuthnot$boys + arbuthnot$girls
+bp <- arbuthnot$boys / tot
+gp <- arbuthnot$girls / tot
+
+plot(x = arbuthnot$year, y = bp, col="blue" , type = "l", 
+xlab="Year", ylab="Proportion", main="Proportion of Boys over time" )
+
+abline(lm(bp ~ arbuthnot$year))
+
+plot(x = arbuthnot$year, y = gp, col="red" , type = "l", 
+     xlab="Year", ylab="Proportion", main="Proportion of Girls over time")
+
+abline(lm(gp ~ arbuthnot$year))
+
+```
+
+Proportion of Boys decreases over a period of time where as Proportion of girls increases over period of time.
