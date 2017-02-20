@@ -1,12 +1,12 @@
 ---
 title: "Probability"
 output:
-  word_document: default
-  pdf_document: default
   html_document:
     css: ./lab.css
     highlight: pygments
     theme: cerulean
+  pdf_document: default
+  word_document: default
 ---
 
 ## Hot Hands
