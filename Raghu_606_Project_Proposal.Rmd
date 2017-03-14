@@ -1,0 +1,129 @@
+---
+html_document:
+  highlight: pygments
+  pdf_document: default
+  theme: cerulean
+  word_document: default
+author: "Raghu Ramnath"
+date: "3/11/2017"
+title: "Raghu_606_Project_Proposal"
+---
+
+```{r setup, include=TRUE}
+require(lubridate)
+require(dplyr)
+require(tidyr)
+require(stringr)
+require(RMySQL)
+require(doBy)
+require(knitr)
+require(ggplot2)
+require(reshape)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Data Preparation
+
+```{r s1, include=TRUE}
+
+yr_2013 <- read.csv(file = ("https://raw.githubusercontent.com/raghu74us/606/master/2013_shooter.csv"),sep =",")
+
+#not including the columns that are not needed for analysis.
+yr_2013 <- yr_2013[ , c('date', 'killed', 'wounded', 'location')]
+     #split state and city based on location
+     str(yr_2013)
+     head(yr_2013,5)   
+   
+     cit_st <- strsplit( as.character(yr_2013$location), ", " , fixed=TRUE) 
+     mat  <- matrix(unlist(cit_st), ncol=2, byrow=TRUE)
+     df   <- as.data.frame(mat)
+     yr_2013_cit_st   <- cbind(yr_2013, df)
+     colnames(yr_2013_cit_st) <- c('date', 'killed', 'wounded', 'location', "City", "State")
+     
+     #Add month and year based on date.
+     yr_2013_cit_st$date <- mdy(yr_2013_cit_st$date)
+     
+     str(yr_2013_cit_st) 
+     
+     y1<-year(yr_2013_cit_st$date)
+     m1<-as.character(yr_2013_cit_st$date, format="%b")
+     d1<-as.character(yr_2013_cit_st$date, format="%d")
+     
+     df1  <- cbind(d1,m1,y1)
+     colnames(df1)  <- c('day','month','year')
+     
+     yr_2013_df2 <- cbind(yr_2013_cit_st , df1)
+     #str(yr_2013_df2)
+    
+    #summarize by total killed and wounded in each state  
+     yr_2013_df2_kw <- yr_2013_df2  %>%
+        select(year,State,month,killed,wounded) %>%
+         filter( str_length(yr_2013_df2$State) == 2) %>%
+          group_by(year,State,month )  %>%
+           summarise_each(funs(sum) ) %>%
+             arrange(year,State,month)
+     
+    #summarize by total incidents in each state        
+        yr_2013_df2_inc <- yr_2013_df2  %>%
+        select(year,State,month,killed,wounded) %>%
+         filter( str_length(yr_2013_df2$State) == 2) %>%
+          group_by(year,State,month )  %>%
+            summarise( total_incidents= n() )  %>%
+             arrange(year,State,month)
+              
+     kable(yr_2013_df2_kw)
+     kable(yr_2013_df2_inc)        
+
+   yr_2013_df2_inc %>% 
+    ggplot( aes(x=total_incidents, y=State)) + 
+    geom_segment(aes(yend=State), xend=0, color='blue') + 
+    geom_point(size=4, aes(color=month)) + 
+    geom_text(aes(label=total_incidents), vjust=-1, hjust=.5,color='black') +
+    scale_color_brewer(palette="Set2", limits=c('Jan', 'Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec')) + 
+     ggtitle("Total Incidents by State and Month") +
+    xlab("Incidents by month") + ylab("City") 
+
+    
+     
+knitr::opts_chunk$set(echo = TRUE)
+```
+### Research question
+
+Is mass shooting predictable in a State based on the prior data  ?.
+I will be using 2013 data for analysis. 
+
+### Cases
+What are the cases, and how many are there?
+
+Each case represents a City and State in the united states. There observations in the given data set.
+
+##Data collection
+###Describe the method of data collection.
+
+Data is available in Buzfeed News. There are data files for each year from 2013 to 2015.
+
+
+##Type of study
+###What type of study is this (observational/experiment)?
+
+This study is observational.
+
+##Data Source
+
+Data is available under the below link.
+https://github.com/BuzzFeedNews/2015-12-mass-shooting-intervals/tree/master/data
+
+##Response
+###What is the response variable, and what type is it (numerical/categorical)?
+
+Response variable is the number of  incidents in a month in a city, State. It is numerical. 
+
+
+##Explanatory
+###What is the explanatory variable, and what type is it (numerical/categorival)?
+
+Number of incidents each month. Has the incidents happened each month what is the count of it.
+This need to be done for atleast 3 years to decide which city has highest incident and the reoccurrence chances each month. 
+
+###Relevant summary statistics
+Provide summary statistics relevant to your research question. For example, if you’re comparing means across groups provide means, SDs, sample sizes of each group. This step requires the use of R, hence a code chunk is provided below. Insert more code chunks as needed.
