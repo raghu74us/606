@@ -1,0 +1,185 @@
+---
+title: "Inference for numerical data"
+author: "Raghu Ramnath"
+date: "3/26/2017"
+output: 
+  html_document: 
+    fig_caption: yes
+    highlight: pygments
+    number_sections: yes
+    theme: cerulean
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## 5.6 Working backwards, Part II. 
+A 90% confidence interval for a population mean is (65, 77). The population distribution is approximately normal and the population standard deviation is unknown. This confidence interval is based on a simple random sample of 25 observations. Calculate the sample mean, the margin of error, and the sample standard deviation.
+
+```{r 5.6}
+n <- 25
+
+# Margin of error is (b-a)/2 confidence interval is (a,b)
+ME <- ((77-65)/2)
+ME
+#sample mean = (a+b)/2 for confidence interval (a,b)
+xbar <- ((77+65)/2)
+xbar
+#Using the qt function and df = 25-1 
+df <- 25-1
+t <- qt(.95, df)
+t
+
+SE <- ME / t
+SE
+
+sd <- SE * sqrt(n)
+sd
+```
+
+
+## 5.14 SAT scores. 
+SAT scores of students at an Ivy League college are distributed with a standard deviation of 250 points. Two statistics students, Raina and Luke, want to estimate the average SAT score of students at this college as part of a class project. They want their margin of error to be no more than 25 points.
+
+(a) Raina wants to use a 90% confidence interval. How large a sample should she collect?
+
+```{r 5.14a}
+mE <- 25
+S <- 250
+z <-1.65
+n <- ((S * z) / mE)^2
+n
+```
+
+(b) Luke wants to use a 99% confidence interval. Without calculating the actual sample size, determine whether his sample should be larger or smaller than Raina’s, and explain your reasoning.
+
+ANS: a larger sample size is required for Luke’s 99% interval.
+
+(c) Calculate the minimum required sample size for Luke.
+
+```{r 5.14b}
+z <- qnorm(0.995)
+z
+n <- ((S * z) / mE)^2
+n
+```
+
+## 5.20 High School and Beyond, 
+Part I. The National Center of Education Statistics conducted a survey of high school seniors, collecting test data on reading, writing, and several other subjects. Here we examine a simple random sample of 200 students from this survey. Side-by-side box plots of reading and writing scores as well as a histogram of the di↵erences in scores are shown below.
+
+(a) Is there a clear di↵erence in the average reading and writing scores?
+  ANS: I do not see a clear difference in the average of the reading and writing scores.
+
+(b) Are the reading and writing scores of each student independent of each other?
+  ANS: scores are independent of each other.
+
+(c) Create hypotheses appropriate for the following research question: is there an evident di↵erence in the average scores of students in the reading and writing exam?
+  ANS:
+    (H_0: mean_(read) - mean_(write) = 0)
+    (H_A: mean_(read) - mean_(write) does not equal 0)
+    
+(d) Check the conditions required to complete this test.
+    ANS: The conditions required for this test are independence and normality.  the observations are independent. Looking at the box plot, i don’t see any skewness or outliers so the conditions are satisfied.
+
+(e) The average observed di↵erence in scores is x ̄read write =  0.545, and the standard deviation of the di↵erences is 8.887 points. Do these data provide convincing evidence of a di↵erence between the average scores on the two exams?
+ANS:
+```{r 5.20e}
+n <- 200
+mean.diff <- -.545
+df <- n-1
+SD <- 8.887
+SE <- SD/sqrt(n)
+T <- (mean.diff-0)/SE
+pvalue <- pt(T, df)
+pvalue
+
+#pvalue is .19 > .05 so we fail to reject the null hypothesis. we do no have convining evidence of a difference between the average reading and writing exam scores.
+
+```
+
+(f) What type of error might we have made? Explain what the error means in the context of the application.
+ ANS: A Type I error is when we incorrectly reject the null hypotheis, while Type II is when we incorrectly reject the alternative hypothesis. In the case above, we may have made a type II error with incorrectly rejecting the alternative hypothesis. In other words, we might have wrongly concluded that there is not a difference in student reading and writing exam scores.
+
+(g) Based on the results of this hypothesis test, would you expect a confidence interval for the average di↵erence between the reading and writing scores to include 0? Explain your reasoning.
+ANS:  Results indicated that there is no difference in the reading and writing scores, I would expect that the confidence interval would include 0.
+
+## 5.32 Fuel e ciency of manual and automatic cars, Part I. 
+Each year the US Environ- mental Protection Agency (EPA) releases fuel economy data on cars manufactured in that year. Below are summary statistics on fuel e ciency (in miles/gallon) from random samples of cars with manual and automatic transmissions manufactured in 2012. Do these data provide strong evidence of a di↵erence between the average fuel e ciency of cars with manual and automatic transmissions in terms of their average city mileage? Assume that conditions for inference are satisfied.42
+
++ Null: mean.A - mean.M = 0
++ Alternate: mean.A - mean.M does not equal 0
+
+```{r 5.32}
+n.a <- 26
+n.m <- 26
+SD.A <- 3.58
+SD.M <- 4.51
+mean.A <- 16.12
+mean.M <- 19.85
+
+alpha <- .05
+mdiff <- mean.A - mean.M
+mdiff
+SE.A <- SD.A/sqrt(n.a) 
+SE.M <- SD.M/sqrt(n.m)
+SE <- sqrt( (SE.A)^2+(SE.M)^2 )
+SE
+T.1 <- (mdiff-0)/SE
+pvalue.1 <- pt(T.1, 25)
+pvalue.1
+pvalue.1 <- 2*pvalue.1  #For two tailed test, multiply by 2
+pvalue.1
+
+# Since pvalue is .003 < .05 we will reject null hypothesis. This means that there is enough evidence to support that there is a difference in the average city miles of automatic and manual vehicles.
+
+```
+
+##5.48 Work hours and education. 
+The General Social Survey collects data on demographics, education, and work, among many other characteristics of US residents.47 Using ANOVA, we can consider educational attainment levels for all 1,172 respondents at once. Below are the distributions of hours worked by educational attainment and relevant summary statistics that will be helpful in carrying out this analysis.
+
+(a) Write hypotheses for evaluating whether the average number of hours worked varies across the five groups.
+
+Null: mean(lessthanhs) = mean(HS) = mean(JC) = mean(B) = mean(G)
+Alternate: at least one of the means differ
+
+(b) Check conditions and describe any assumptions you must make to proceed with the test.
+
+The observations are independent within and across groups: Given the nature of the survey, we will assume independence within and across the groups.
+
+The data within each group are nearly normal: The box plots do not support nearly normal data within each group. Particularly, the Bachelor's distribution is skewed and has significant outliers. Each group has outliers though other groups appear closer to normally distributed.
+
+The variability across the groups is about equal: There is general similarity of variabily, though the Bachelor's again stands out as deviating.
+
+(c) Below is part of the output associated with this test. Fill in the empty cells.
+
+```{r 5.48}
+n <- 1172
+k <- 5
+
+dfG <- k - 1
+dfG
+dfE <- n-k
+dfE
+
+meanTotal <- 40.45
+dfData <- data.frame(n=c(121, 546,97,253,155), 
+                     sd=c(15.81,14.97,18.1,13.62,15.51), 
+                     mean=c(38.67,39.6,41.39,42.55,40.85))
+# Compute the SSG
+SSG <- sum( dfData$n * (dfData$mean - meanTotal)^2 )
+SSG
+# Compute the MSG
+MSG <- (1 / dfG) * SSG
+MSG
+MSE <- 267382/1167
+# Compute the F statistic
+F <- MSG / MSE
+F
+```
+
+(d) What is the conclusion of the test?
+
+Given the p-value = 0.0682 is greater than 0.05, I conclude that there is not a significant difference between the groups and therefore I don't reject the null hypothesis.
