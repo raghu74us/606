@@ -7,6 +7,10 @@ html_document:
 author: "Raghu Ramnath"
 date: "3/11/2017"
 title: "Raghu_606_Project_Proposal"
+output: 
+  html_document: 
+    fig_height: 7
+    fig_width: 10
 ---
 
 ```{r setup, include=TRUE}
@@ -74,19 +78,27 @@ yr_2013 <- yr_2013[ , c('date', 'killed', 'wounded', 'location')]
      kable(yr_2013_df2_kw)
      kable(yr_2013_df2_inc)        
 
-   yr_2013_df2_inc %>% 
-    ggplot( aes(x=total_incidents, y=State)) + 
-    geom_segment(aes(yend=State), xend=0, color='blue') + 
-    geom_point(size=4, aes(color=month)) + 
-    geom_text(aes(label=total_incidents), vjust=-1, hjust=.5,color='black') +
-    scale_color_brewer(palette="Set2", limits=c('Jan', 'Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec')) + 
-     ggtitle("Total Incidents by State and Month") +
-    xlab("Incidents by month") + ylab("City") 
 
-    
+# Total Incidents by State:
+ggplot(data = yr_2013_df2_inc,
+  aes(State, total_incidents)) +
+  stat_summary(fun.y = sum, # adds up all observations for the State
+    geom = "bar")  
      
+# Total killed + wounded  by State:
+ggplot(data = yr_2013_df2_kw,
+  aes(State, killed + wounded )) +
+  stat_summary(fun.y = sum, # adds up all observations for the State
+    geom = "bar")  
+
+# Total incidents by state and month
+ggplot(data = yr_2013_df2_inc, aes(x = yr_2013_df2_inc$State, y = yr_2013_df2_inc$total_incidents, fill = yr_2013_df2_inc$month)) + 
+       stat_summary(fun.y = sum, # adds up all observations for the State
+           geom = "bar") 
+  
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
 ### Research question
 
 Is mass shooting predictable in a State based on the prior data  ?.
@@ -127,3 +139,17 @@ This need to be done for atleast 3 years to decide which city has highest incide
 
 ###Relevant summary statistics
 Provide summary statistics relevant to your research question. For example, if you’re comparing means across groups provide means, SDs, sample sizes of each group. This step requires the use of R, hence a code chunk is provided below. Insert more code chunks as needed.
+
+
+```{r s2, include=TRUE}
+
+summary(yr_2013_df2_inc$total_incidents)
+summary(yr_2013_df2_kw$killed+yr_2013_df2_kw$wounded)
+table(yr_2013_df2_inc$total_incidents)
+table(yr_2013_df2_kw$killed)
+table(yr_2013_df2_kw$wounded)
+
+# I will be using the average(mean) number of incidents by State in 2013  which can be compared with multiple years. Similarly, will be using the average number of people killed + wounded by State in 2013 for comparison with 2014 and 2015.
+
+knitr::opts_chunk$set(echo = TRUE)
+```
