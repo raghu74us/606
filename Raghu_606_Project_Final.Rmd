@@ -1,0 +1,248 @@
+---
+author: "Raghu Ramnath"
+date: "3/11/2017"
+title: "Raghu_606_Project_Final"
+output: 
+  html_document:
+    code_folding: show
+    css: ~/Lab7/lab.css
+    fig_height: 7
+    fig_width: 10
+    highlight: textmate
+    theme: cerulean
+    toc: yes
+    toc_float: yes
+---
+
+```{r, setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```     
+
+
+## Part I - Introduction
+
+  In this Project, I will analyze the shooting incidents in all the 50 States in US based on the data from year 2013 to 2015. The objective is to find the States having highest shooting rate and people killed and wounded and see if there is any trend by comparison of the count of incidents. Has the incidents raised or lowered in the three years. Is there any particular month having high incident rate in any state. This would help to understand if any measure has been taken already or need to take to lower the incidents. This would also warn in terms of understanding high crime prone State.
+    
+### Environment Prep
+
+```{r, warning=FALSE, message=FALSE}
+
+if (!require('dplyr')) install.packages('dplyr')
+if (!require('stringr')) install.packages('stringr')
+if (!require('ggplot2')) install.packages('ggplot2')
+if (!require('lubridate')) install.packages('lubridate')
+if (!require('tidyr')) install.packages('tidyr')
+if (!require('doBy')) install.packages('doBy')
+if (!require('knitr')) install.packages('knitr')
+if (!require('reshape')) install.packages('reshape')
+if (!require('lattice')) install.packages('lattice')
+
+```     
+
+
+## Part 2 - Data
+
+```{r D1, include=TRUE , warning=FALSE, message=FALSE}
+
+yr_2013 <- read.csv(file = ("https://raw.githubusercontent.com/raghu74us/606/master/2013_shooter.csv"),sep =",")
+
+yr_2014 <- read.csv(file = ("https://raw.githubusercontent.com/BuzzFeedNews/2015-12-mass-shooting-intervals/master/data/2014MASTER.csv"),sep =",")
+
+yr_2015 <- read.csv(file = ("https://raw.githubusercontent.com/BuzzFeedNews/2015-12-mass-shooting-intervals/master/data/2015CURRENT.csv"),sep =",")
+
+```     
+
+
+### Cases
+
+  There are only 3 years of data available which totals to 1050 observations and 9 variables. This data set has the year, month, City, state and incident date and total killed and wounded.
+
+### Describe the method of data collection.
+
+  Data is available in Buzfeed News. There are data files for each year from 2013 to 2015.
+
+
+### Type of study
+
+  This study is observational.
+
+### Data Source
+
+  Data is available under the below link.
+https://github.com/BuzzFeedNews/2015-12-mass-shooting-intervals/tree/master/data
+
+### Response
+
+  Response variable is the number of  incidents in a month in a city, State. It is numerical. 
+
+
+### Explanatory
+
+  Number of incidents each month. Has the incidents happened each month what is the count of it.
+  This need to be done for atleast 3 years to decide which city has highest incident and the reoccurrence  chances each month. 
+
+
+## Part 3 - Exploratory data analysis
+
+```{r s1, include=TRUE}
+
+#not including the columns that are not needed for analysis.
+yr_2013 <- yr_2013[ , c('date', 'killed', 'wounded', 'location')]
+colnames(yr_2013) <- c('Date', 'Dead', 'Injured', 'Location')
+yr_2013$Year <- "2013"
+yr_2014 <- yr_2014[ , c('Date', 'Dead', 'Injured', 'Location')]
+yr_2014$Year <- "2014"
+yr_2015 <- yr_2015[ , c('Date', 'Dead', 'Injured', 'Location')]
+yr_2015$Year <- "2015"
+
+sh <-rbind(yr_2013, yr_2014, yr_2015)
+
+
+     #split state and city based on location
+     str(sh)
+     head(sh,5)   
+   
+     cit_st<-str_split_fixed(sh$Location, ",", 2)
+     sh   <- cbind(sh, cit_st)
+     sh$Year<- as.factor(sh$Year)
+     colnames(sh) <- c('date', 'killed', 'wounded', 'location', "Year","City", "State")
+     sh$State<- as.factor(sh$State)
+     #Add month and year based on date.
+     sh$date <- mdy(sh$date)
+     
+     str(sh) 
+     
+     #y1<-year(sh$date)
+     m1<-as.character(sh$date, format="%b")
+     d1<-as.character(sh$date, format="%d")
+     
+     df1  <- cbind(d1,m1)
+     colnames(df1)  <- c('day','month')
+     
+     sh <- cbind(sh , df1)
+     
+     sh$State <- trimws(toupper(sh$State))
+     sh$State <- replace(sh$State, sh$State=="ILLINOIS", "IL")
+     sh$State <- replace(sh$State, sh$State=="TENNESSEE", "TN")
+     sh$State <- replace(sh$State, sh$State=="KANSAS", "KS")
+     sh$State <- replace(sh$State, sh$State=="LOUISIANA", "MO")
+     sh$State <- replace(sh$State, sh$State=="OHIO", "OH")
+     sh$State <- replace(sh$State, sh$State=="D.C.", "DC")
+     sh$State <- replace(sh$State, sh$State=="PUERTO RICO", "NA")
+     sh$State <- replace(sh$State, sh$State=="", "NA")
+          
+     
+     sh_us_sum <- sh %>%  
+         select(Year,State,killed,wounded) %>%
+          group_by(Year,State )  %>%
+            summarise( total_incidents= n() ) %>%
+               top_n(5)
+     
+     
+     ggplot(sh_us_sum, aes(State,total_incidents)) + 
+    geom_line(aes(color=Year, group=Year)) +
+     ggtitle("Shooting in Top 5 States from 2013 to 2015")    
+       
+     sh1 <- sh[ !((trimws(sh$State)) != "CA"), ]
+    
+    #summarize by total killed and wounded in California  
+     sh_kw_ca <- sh1  %>%
+        select(Year,State,month,killed,wounded) %>%
+          group_by(Year,State,month )  %>%
+           summarise_each(funs(sum) ) %>%
+             arrange(Year,State,month)
+     
+     sh_kw_ca$Tot_kw<- sh_kw_ca$killed + sh_kw_ca$wounded
+     
+    #summarize by total incidents in California        
+      sh_inc_ca <- sh1  %>%
+        select(Year,State,month,killed+wounded) %>%
+          group_by(Year,State,month )  %>%
+           summarise( total_incidents= n() ) 
+      
+      
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Plots
+
+```{r, P1, include = TRUE}
+#Incidents from 2013 to 2015 in California Monthwise.      
+ggplot( sh_inc_ca , aes(sh_inc_ca$month, 
+                sh_inc_ca$total_incidents, group=Year, colour=Year)) +
+  geom_line() +
+  geom_point() +
+  labs(x="Month", colour="Year") +
+  theme_classic() +
+     ggtitle("Incidents from 2013 to 2015 in California Monthwise")
+
+#Total Killed and Wounded from 2013 to 2015 in California Monthwise.      
+ggplot( sh_kw_ca , aes( sh_kw_ca$month,sh_kw_ca$Tot_kw, group=Year, colour=Year))  +
+  geom_line() +
+  geom_point() +
+  labs(x="Month", colour="Year") +
+  theme_classic() +
+    ggtitle("Total killed and Wounded from 2013 to 2015 in California Monthwise")
+
+
+knitr::opts_chunk$set(echo = TRUE)
+```     
+
+## Part 4 - Inference
+
+### Hypothesis
+
+$H_0: \mu_{TJan} = \mu_{Feb} =... \mu_{Dec} $.  The avg monthly shooting does not vary across all year.
+
+$H_A:$ The avg monthly shooting across some or all months does vary.
+
+### Check Conditions
+
+```{r s2, include=TRUE}
+
+#box plot from Jan to Dec in CA from 2013-15
+
+bwplot(sh_inc_ca$total_incidents ~ sh_inc_ca$month | sh_inc_ca$Year, sh_inc_ca,main="Incidents by Month from 2013-15",xlab="month",ylab="Total Incidents")
+
+#wide format
+      sh_inc_w <- sh_inc_ca  %>%
+                   spread(month, total_incidents, fill=NA, convert = FALSE, drop=TRUE, sep=NULL)
+
+      summary(sh_inc_w)
+      boxplot(sh_inc_w[3:14], main="Incidents by Month from 2013-15",xlab="month",ylab="Total Incidents")
+
+# Average mean and SD of Jan to Dec.
+      
+sh_inc_ca_msc <- data.frame(State=sh_inc_ca$State,Month= sh_inc_ca$month,Incidents= sh_inc_ca$total_incidents)
+
+sh_inc_ca_TAS <- aggregate(Incidents ~ Month, data = sh_inc_ca_msc, function(x) c(Total = sum(x), Average = mean(x), SD = sd(x) )) 
+
+sh_inc_ca_TAS<- cbind(sh_inc_ca_TAS[-ncol(sh_inc_ca_TAS)], sh_inc_ca_TAS[[ncol(sh_inc_ca_TAS)]])
+
+sh_inc_ca_TAS
+
+p<- ggplot(sh_inc_ca_TAS, aes(x=sh_inc_ca_TAS$Total, y=sh_inc_ca_TAS$Average, group=sh_inc_ca_TAS$Month, color=sh_inc_ca_TAS$Month)) + 
+  geom_line() +
+  geom_point()+
+  geom_errorbar(aes(ymin=sh_inc_ca_TAS$Total-sh_inc_ca_TAS$SD, ymax=sh_inc_ca_TAS$Total+sh_inc_ca_TAS$SD), width=.2,
+                 position=position_dodge(0.05))
+#print(p)
+# Finished line plot
+p + labs(title="Shooting Incidents by Month in California", x="Incidents Total", y = "Average by Month")+
+   theme_classic() 
+
+
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+We believe that the shooting data from each month is independent and varies across all months.
+
+## Part 5 - Conclusion
+
+Based on the data analysis, I took the top 5 states where the shooting rate is hgh and indentified that its high in California. I was analyzing the CA state in detail from 2013-15 month wise. The study concludes that the shooting incidents has been decreasing from 2013 to 2015. The number of incidents occurring each month is not related or dependent on previous months or years. Also, shooting rate is not predictive in a State or month based on the data.
+
+## Part 6 - References
+
+
+
